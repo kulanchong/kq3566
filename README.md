@@ -3,7 +3,7 @@
 This repository contains only the KQ3566 board adaptation files for
 ImmortalWrt/OpenWrt. It is not a full OpenWrt source tree.
 
-Base tree used for board bring-up:
+Base tree used for board bring-up and local hardware validation:
 
 - ImmortalWrt `openwrt-24.10`
 - Base commit: `07972a2388131947da9cbe334fb56ad52b8aab80`
@@ -17,6 +17,10 @@ Default automatic build source:
 - Repository: `https://github.com/immortalwrt/immortalwrt`
 - Ref: `openwrt-25.12`
 - Patch: `patches/openwrt-25.12/0001-rockchip-add-KQ3566-board-support.patch`
+
+The `openwrt-25.12` patch is the default CI path. It has been checked
+against a clean official `openwrt-25.12` tree and through
+`make target/linux/prepare` for the Rockchip 6.12 kernel patch stage.
 
 ## Apply
 
@@ -85,6 +89,7 @@ immortalwrt-rockchip-armv8-kq_kq3566-squashfs-emmc.img.gz
 - PCIe PERSTB: GPIO0_B0
 - SDMMC0 power enable: GPIO0_A5
 - Recovery key: SARADC VIN0
+- WORKING LED: GPIO0_C3
 - UART baud rate: 1500000
 
 More board notes are in `docs/kq3566.md`.

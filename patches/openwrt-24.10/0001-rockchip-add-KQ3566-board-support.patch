@@ -1,35 +1,6 @@
-From f8e16f52d40eacb3ad9f38e3fb49ee9995689062 Mon Sep 17 00:00:00 2001
-From: ddc <ddc@debian-op.local>
-Date: Fri, 26 Jun 2026 12:02:05 -0400
-Subject: [PATCH] rockchip: add KQ3566 board support
-
----
- docs/kq3566.md                                |  69 +++++
- .../arm-trusted-firmware-rockchip/Makefile    |  22 ++
- .../atf-version.mk                            |   1 +
- package/boot/uboot-envtools/files/fw_defaults |   2 +
- package/boot/uboot-rockchip/Makefile          |  10 +
- .../arch/arm/dts/rk3566-kq3566-u-boot.dtsi    |  23 ++
- .../src/arch/arm/dts/rk3566-kq3566.dts        | 169 +++++++++++
- .../src/configs/kq3566-rk3566_defconfig       |  79 ++++++
- .../armv8/base-files/etc/board.d/01_leds      |   1 +
- .../armv8/base-files/etc/board.d/02_network   |   2 +
- .../etc/hotplug.d/net/40-net-smp-affinity     |   1 +
- .../lib/preinit/05_set_preinit_iface_kq3566   |   9 +
- target/linux/rockchip/image/armv8.mk          |  13 +
- target/linux/rockchip/modules.mk              |   2 +-
- ...-arm64-dts-rockchip-add-kq3566-board.patch | 267 ++++++++++++++++++
- 15 files changed, 669 insertions(+), 1 deletion(-)
- create mode 100644 docs/kq3566.md
- create mode 100644 package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566-u-boot.dtsi
- create mode 100644 package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566.dts
- create mode 100644 package/boot/uboot-rockchip/src/configs/kq3566-rk3566_defconfig
- create mode 100644 target/linux/rockchip/armv8/base-files/lib/preinit/05_set_preinit_iface_kq3566
- create mode 100644 target/linux/rockchip/patches-6.6/011-07-arm64-dts-rockchip-add-kq3566-board.patch
-
 diff --git a/docs/kq3566.md b/docs/kq3566.md
 new file mode 100644
-index 0000000000..7bc0e9fed5
+index 0000000000000000000000000000000000000000..7bc0e9fed521c1e0b96bba58f2523ec118145a70
 --- /dev/null
 +++ b/docs/kq3566.md
 @@ -0,0 +1,69 @@
@@ -103,7 +74,7 @@ index 0000000000..7bc0e9fed5
 +  `Loading Environment from nowhere`; firstboot now skips U-Boot default
 +  import when `/etc/fw_env.config` is absent.
 diff --git a/package/boot/arm-trusted-firmware-rockchip/Makefile b/package/boot/arm-trusted-firmware-rockchip/Makefile
-index 94a4ab8e98..aea2976d5a 100644
+index 94a4ab8e98b09c1ad55ae40269b331a5644cc837..aea2976d5a3f0cb4e0d79ba252a2fe736e959257 100644
 --- a/package/boot/arm-trusted-firmware-rockchip/Makefile
 +++ b/package/boot/arm-trusted-firmware-rockchip/Makefile
 @@ -57,6 +57,12 @@ define Trusted-Firmware-A/rk3566
@@ -150,7 +121,7 @@ index 94a4ab8e98..aea2976d5a 100644
  	# This comment is the workaround for "extraneous 'endif'" error
  ifneq ($(LOADER),)
 diff --git a/package/boot/arm-trusted-firmware-rockchip/atf-version.mk b/package/boot/arm-trusted-firmware-rockchip/atf-version.mk
-index 9e25a80ffe..3a780e2aa4 100644
+index 9e25a80ffe9064f79c2c3699998a905d2be2e93d..3a780e2aa4ed927701966a9d6e70323d79e6af5f 100644
 --- a/package/boot/arm-trusted-firmware-rockchip/atf-version.mk
 +++ b/package/boot/arm-trusted-firmware-rockchip/atf-version.mk
 @@ -12,6 +12,7 @@ RK3399_LOADER:=rk3399_miniloader_v1.30.bin
@@ -162,7 +133,7 @@ index 9e25a80ffe..3a780e2aa4 100644
  RK3568_ATF:=rk3568_bl31_v1.44.elf
  RK3568_TPL:=rk3568_ddr_1560MHz_v1.21.bin
 diff --git a/package/boot/uboot-envtools/files/fw_defaults b/package/boot/uboot-envtools/files/fw_defaults
-index 42558aaa88..12ee112a48 100644
+index 42558aaa88395494e7a4fdd7b7c8b82df8814c77..12ee112a4881401ac821dc77b562474ac937911e 100644
 --- a/package/boot/uboot-envtools/files/fw_defaults
 +++ b/package/boot/uboot-envtools/files/fw_defaults
 @@ -1,5 +1,7 @@
@@ -174,7 +145,7 @@ index 42558aaa88..12ee112a48 100644
  
  board_config_update
 diff --git a/package/boot/uboot-rockchip/Makefile b/package/boot/uboot-rockchip/Makefile
-index c86e2a4700..a0904dbd65 100644
+index c86e2a47007c812a3e42520ceac4a58016b209f5..a0904dbd650a2a5c5af8f292bebd7b0cd5b3c4bd 100644
 --- a/package/boot/uboot-rockchip/Makefile
 +++ b/package/boot/uboot-rockchip/Makefile
 @@ -191,6 +191,15 @@ define U-Boot/nanopi-r3s-rk3566
@@ -203,7 +174,7 @@ index c86e2a4700..a0904dbd65 100644
    radxa-zero-3-rk3566 \
 diff --git a/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566-u-boot.dtsi b/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566-u-boot.dtsi
 new file mode 100644
-index 0000000000..e06ed7650d
+index 0000000000000000000000000000000000000000..e06ed7650d61014ddabe7ea9677d0ec3c8a065c2
 --- /dev/null
 +++ b/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566-u-boot.dtsi
 @@ -0,0 +1,23 @@
@@ -232,7 +203,7 @@ index 0000000000..e06ed7650d
 +};
 diff --git a/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566.dts b/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566.dts
 new file mode 100644
-index 0000000000..9742dcd42a
+index 0000000000000000000000000000000000000000..9742dcd42a250c0d82bc7cf23169a8b2fb0b1d85
 --- /dev/null
 +++ b/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566.dts
 @@ -0,0 +1,169 @@
@@ -407,7 +378,7 @@ index 0000000000..9742dcd42a
 +};
 diff --git a/package/boot/uboot-rockchip/src/configs/kq3566-rk3566_defconfig b/package/boot/uboot-rockchip/src/configs/kq3566-rk3566_defconfig
 new file mode 100644
-index 0000000000..1a8fefb80d
+index 0000000000000000000000000000000000000000..1a8fefb80d8ec72de0960d31ef574160d6b83061
 --- /dev/null
 +++ b/package/boot/uboot-rockchip/src/configs/kq3566-rk3566_defconfig
 @@ -0,0 +1,79 @@
@@ -491,7 +462,7 @@ index 0000000000..1a8fefb80d
 +CONFIG_USB_DWC3_GENERIC=y
 +CONFIG_ERRNO_STR=y
 diff --git a/target/linux/rockchip/armv8/base-files/etc/board.d/01_leds b/target/linux/rockchip/armv8/base-files/etc/board.d/01_leds
-index 3505c4ca8a..e4c73da83c 100644
+index 3505c4ca8a09c449f00293dc32b058d4e31521ce..e4c73da83c2718038ff33a990423d9771a8dd8eb 100644
 --- a/target/linux/rockchip/armv8/base-files/etc/board.d/01_leds
 +++ b/target/linux/rockchip/armv8/base-files/etc/board.d/01_leds
 @@ -16,6 +16,7 @@ friendlyarm,nanopi-r4s|\
@@ -503,7 +474,7 @@ index 3505c4ca8a..e4c73da83c 100644
  xunlong,orangepi-r1-plus-lts)
  	ucidef_set_led_netdev "wan" "WAN" "green:wan" "eth0"
 diff --git a/target/linux/rockchip/armv8/base-files/etc/board.d/02_network b/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
-index 637c428ade..3008cb5e9d 100644
+index 637c428adeea70fe0334298c845887e41a0bb2f8..3008cb5e9d3678b78f86772cd7522df45b51e3eb 100644
 --- a/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
 +++ b/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
 @@ -20,6 +20,7 @@ rockchip_setup_interfaces()
@@ -523,7 +494,7 @@ index 637c428ade..3008cb5e9d 100644
  		wan_mac=$(macaddr_generate_from_mmc_cid mmcblk*)
  		lan_mac=$(macaddr_add "$wan_mac" 1)
 diff --git a/target/linux/rockchip/armv8/base-files/etc/hotplug.d/net/40-net-smp-affinity b/target/linux/rockchip/armv8/base-files/etc/hotplug.d/net/40-net-smp-affinity
-index d69532b9dd..8b991a64cf 100644
+index d69532b9dd79c319aad2e414ace9950972db4fd3..8b991a64cff0d087ae1f258eec201726aca1244f 100644
 --- a/target/linux/rockchip/armv8/base-files/etc/hotplug.d/net/40-net-smp-affinity
 +++ b/target/linux/rockchip/armv8/base-files/etc/hotplug.d/net/40-net-smp-affinity
 @@ -37,6 +37,7 @@ ezpro,mrkaio-m68s|\
@@ -536,7 +507,7 @@ index d69532b9dd..8b991a64cf 100644
  mmbox,anas3035|\
 diff --git a/target/linux/rockchip/armv8/base-files/lib/preinit/05_set_preinit_iface_kq3566 b/target/linux/rockchip/armv8/base-files/lib/preinit/05_set_preinit_iface_kq3566
 new file mode 100644
-index 0000000000..6ece3852ca
+index 0000000000000000000000000000000000000000..6ece3852ca97b2564fa23c696e134649828171d8
 --- /dev/null
 +++ b/target/linux/rockchip/armv8/base-files/lib/preinit/05_set_preinit_iface_kq3566
 @@ -0,0 +1,9 @@
@@ -550,10 +521,10 @@ index 0000000000..6ece3852ca
 +
 +boot_hook_add preinit_main kq3566_set_preinit_iface
 diff --git a/target/linux/rockchip/image/armv8.mk b/target/linux/rockchip/image/armv8.mk
-index f322d35fb0..2c155690c1 100644
+index f322d35fb0abb8c81941b394c6687b70a38a15ed..7200d05f70718ac8cfbda03e14334d7655819417 100644
 --- a/target/linux/rockchip/image/armv8.mk
 +++ b/target/linux/rockchip/image/armv8.mk
-@@ -160,6 +160,19 @@ define Device/friendlyarm_nanopi-r3s
+@@ -160,6 +160,20 @@ define Device/friendlyarm_nanopi-r3s
  endef
  TARGET_DEVICES += friendlyarm_nanopi-r3s
  
@@ -566,7 +537,8 @@ index f322d35fb0..2c155690c1 100644
 +  BOOT_FLOW := pine64-img
 +  IMAGES := sysupgrade.img.gz emmc.img.gz
 +  IMAGE/emmc.img.gz := boot-common | boot-script $$(BOOT_SCRIPT) | $$(BOOT_FLOW) | gzip
-+  DEVICE_PACKAGES := kmod-r8169 kmod-input-adc-keys kmod-saradc-rockchip
++  DEVICE_PACKAGES := kmod-r8169 kmod-input-adc-keys kmod-saradc-rockchip \
++	kmod-drm-rockchip
 +endef
 +TARGET_DEVICES += kq_kq3566
 +
@@ -574,10 +546,35 @@ index f322d35fb0..2c155690c1 100644
    DEVICE_VENDOR := FriendlyARM
    DEVICE_MODEL := NanoPi R4S
 diff --git a/target/linux/rockchip/modules.mk b/target/linux/rockchip/modules.mk
-index 379a32c218..fa2bc14a00 100644
+index 379a32c218fffbd0e23985bb45ebd457527f9366..4b466ee836bf8d0a627e7d1fa606c9b21482cd5f 100644
 --- a/target/linux/rockchip/modules.mk
 +++ b/target/linux/rockchip/modules.mk
-@@ -59,7 +59,7 @@ define KernelPackage/saradc-rockchip
+@@ -13,6 +13,7 @@ define KernelPackage/drm-rockchip
+ 	CONFIG_DRM_FBDEV_EMULATION=y \
+ 	CONFIG_DRM_FBDEV_OVERALLOC=100 \
+ 	CONFIG_DRM_BRIDGE=y \
++	CONFIG_DRM_DISPLAY_CONNECTOR=m \
+ 	CONFIG_HDMI=y \
+ 	CONFIG_PHY_ROCKCHIP_INNO_HDMI \
+ 	CONFIG_DRM_DW_HDMI \
+@@ -33,6 +34,7 @@ define KernelPackage/drm-rockchip
+ 	CONFIG_DRM_PANEL_BRIDGE=y \
+ 	CONFIG_DRM_PANEL_SIMPLE
+   FILES:= \
++	$(LINUX_DIR)/drivers/gpu/drm/bridge/display-connector.ko \
+ 	$(LINUX_DIR)/drivers/gpu/drm/bridge/synopsys/dw-hdmi.ko \
+ 	$(LINUX_DIR)/drivers/gpu/drm/bridge/synopsys/dw-hdmi-cec.ko \
+ 	$(LINUX_DIR)/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.ko \
+@@ -41,7 +43,7 @@ define KernelPackage/drm-rockchip
+ 	$(LINUX_DIR)/drivers/gpu/drm/panel/panel-simple.ko \
+ 	$(LINUX_DIR)/drivers/gpu/drm/rockchip/rockchipdrm.ko \
+ 	$(LINUX_DIR)/drivers/media/cec/core/cec.ko
+-  AUTOLOAD:=$(call AutoProbe,rockchipdrm phy-rockchip-inno-hdmi dw-hdmi-cec)
++  AUTOLOAD:=$(call AutoProbe,display-connector rockchipdrm phy-rockchip-inno-hdmi dw-hdmi-cec)
+ endef
+ 
+ define KernelPackage/drm-rockchip/description
+@@ -59,7 +61,7 @@ define KernelPackage/saradc-rockchip
  	CONFIG_ROCKCHIP_SARADC
    FILES:= \
  	$(LINUX_DIR)/drivers/iio/adc/rockchip_saradc.ko
@@ -588,10 +585,10 @@ index 379a32c218..fa2bc14a00 100644
  define KernelPackage/saradc-rockchip/description
 diff --git a/target/linux/rockchip/patches-6.6/011-07-arm64-dts-rockchip-add-kq3566-board.patch b/target/linux/rockchip/patches-6.6/011-07-arm64-dts-rockchip-add-kq3566-board.patch
 new file mode 100644
-index 0000000000..60ddce87eb
+index 0000000000000000000000000000000000000000..82a360588e513e807cda654be33773461b08ba36
 --- /dev/null
 +++ b/target/linux/rockchip/patches-6.6/011-07-arm64-dts-rockchip-add-kq3566-board.patch
-@@ -0,0 +1,267 @@
+@@ -0,0 +1,331 @@
 +From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 +From: OpenWrt Builder <builder@example.com>
 +Date: Thu, 25 Jun 2026 21:20:00 -0400
@@ -621,7 +618,7 @@ index 0000000000..60ddce87eb
 + dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-soquartz-blade.dtb
 +--- /dev/null
 ++++ b/arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts
-+@@ -0,0 +1,237 @@
++@@ -0,0 +1,301 @@
 ++// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 ++
 ++#include "rk3566-nanopi-r3s.dts"
@@ -629,6 +626,24 @@ index 0000000000..60ddce87eb
 ++/ {
 ++	model = "KQ3566";
 ++	compatible = "kq,kq3566", "rockchip,rk3566";
+++
+++	hdmi-con {
+++		compatible = "hdmi-connector";
+++		type = "a";
+++
+++		port {
+++			hdmi_con_in: endpoint {
+++				remote-endpoint = <&hdmi_out_con>;
+++			};
+++		};
+++	};
+++
+++	gpio-leds {
+++		pinctrl-0 = <&working_led_pin>;
+++
+++		/delete-node/ led-1;
+++		/delete-node/ led-2;
+++	};
 ++
 ++	adc-keys-0 {
 ++		compatible = "adc-keys";
@@ -819,11 +834,44 @@ index 0000000000..60ddce87eb
 ++	status = "okay";
 ++};
 ++
+++&power_led {
+++	color = <LED_COLOR_ID_GREEN>;
+++	function = LED_FUNCTION_STATUS;
+++	gpios = <&gpio0 RK_PC3 GPIO_ACTIVE_HIGH>;
+++	default-state = "on";
+++};
+++
 ++&sdmmc0 {
 ++	/delete-property/ sd-uhs-sdr50;
 ++	no-1-8-v;
 ++	vmmc-supply = <&vcc3v3_sd_kq>;
 ++	vqmmc-supply = <&vccio_sd_kq>;
+++};
+++
+++&hdmi {
+++	avdd-0v9-supply = <&vdda_0v9_kq>;
+++	avdd-1v8-supply = <&vcca_1v8_kq>;
+++	status = "okay";
+++};
+++
+++&hdmi_in {
+++	hdmi_in_vp0: endpoint {
+++		remote-endpoint = <&vp0_out_hdmi>;
+++	};
+++};
+++
+++&hdmi_out {
+++	hdmi_out_con: endpoint {
+++		remote-endpoint = <&hdmi_con_in>;
+++	};
+++};
+++
+++&hdmi_sound {
+++	status = "okay";
+++};
+++
+++&i2s0_8ch {
+++	status = "okay";
 ++};
 ++
 ++&gmac1 {
@@ -858,7 +906,17 @@ index 0000000000..60ddce87eb
 ++			rockchip,pins = <0 RK_PC4 RK_FUNC_GPIO &pcfg_pull_up>;
 ++		};
 ++	};
+++
+++	gpio-leds {
+++		working_led_pin: working-led-pin {
+++			rockchip,pins = <0 RK_PC3 RK_FUNC_GPIO &pcfg_pull_none>;
+++		};
+++	};
 ++};
--- 
-2.39.5
-
+++
+++&vp0 {
+++	vp0_out_hdmi: endpoint@ROCKCHIP_VOP2_EP_HDMI0 {
+++		reg = <ROCKCHIP_VOP2_EP_HDMI0>;
+++		remote-endpoint = <&hdmi_in_vp0>;
+++	};
+++};
