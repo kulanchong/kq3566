@@ -537,7 +537,7 @@ index f07512624ee9b855d324ad498163baca1c617157..9a1ea95d30edbd9022ab8e64e6362a9b
 +  $(Device/rk3566)
 +  DEVICE_VENDOR := KQ
 +  DEVICE_MODEL := KQ3566
-+  DEVICE_DTS := rockchip/rk3566-kq3566
++  DEVICE_DTS := rk3566-kq3566
 +  UBOOT_DEVICE_NAME := kq3566-rk3566
 +  IMAGES := sysupgrade.img.gz emmc.img.gz
 +  IMAGE/emmc.img.gz := boot-common | boot-script $$(BOOT_SCRIPT) | $$(BOOT_FLOW) | gzip
