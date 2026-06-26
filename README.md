@@ -3,15 +3,31 @@
 This repository contains only the KQ3566 board adaptation files for
 ImmortalWrt/OpenWrt. It is not a full OpenWrt source tree.
 
-Base tree used for testing:
+Base tree used for board bring-up:
 
 - ImmortalWrt `openwrt-24.10`
 - Base commit: `07972a2388131947da9cbe334fb56ad52b8aab80`
 - KQ3566 adaptation commit: `f8e16f52d40eacb3ad9f38e3fb49ee9995689062`
 
+The repository also contains a GitHub Actions workflow that builds from
+the official ImmortalWrt repository and publishes firmware to Releases.
+
+Default automatic build source:
+
+- Repository: `https://github.com/immortalwrt/immortalwrt`
+- Ref: `master` by default, following the official latest branch
+- Patch: `patches/master/0001-rockchip-add-KQ3566-board-support.patch`
+
 ## Apply
 
 From a clean ImmortalWrt source tree:
+
+```sh
+git checkout master
+git apply /path/to/kq3566/patches/master/0001-rockchip-add-KQ3566-board-support.patch
+```
+
+For the older tested `openwrt-24.10` tree:
 
 ```sh
 git checkout openwrt-24.10
@@ -65,3 +81,23 @@ immortalwrt-rockchip-armv8-kq_kq3566-squashfs-emmc.img.gz
 - UART baud rate: 1500000
 
 More board notes are in `docs/kq3566.md`.
+
+## Automatic Build
+
+The workflow `.github/workflows/build-kq3566.yml` supports manual,
+scheduled, and push-triggered builds. It can customize:
+
+- official ImmortalWrt source ref
+- default LAN and preinit IP
+- extra feeds
+- packages and package options
+- release timezone
+
+Finished firmware is uploaded as a workflow artifact and pushed to GitHub
+Releases. Release titles include date and model, for example:
+
+```text
+2026-06-26 KQ3566 ImmortalWrt
+```
+
+See `docs/github-actions.md` for variable names and examples.

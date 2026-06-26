@@ -1,0 +1,240 @@
+name: Build KQ3566 ImmortalWrt
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: "ImmortalWrt branch, tag, or commit. Empty = repository variable IMMORTALWRT_REF or master."
+        required: false
+        default: ""
+      default_ip:
+        description: "LAN and preinit IP. Empty = repository variable DEFAULT_IP or 192.168.1.1."
+        required: false
+        default: ""
+      custom_feeds:
+        description: "Extra feeds.conf lines. Empty = repository variable CUSTOM_FEEDS."
+        required: false
+        default: ""
+      custom_packages:
+        description: "Packages or CONFIG_PACKAGE_* symbols to enable. Empty = repository variable CUSTOM_PACKAGES."
+        required: false
+        default: ""
+      disable_packages:
+        description: "Packages to disable. Empty = repository variable DISABLE_PACKAGES."
+        required: false
+        default: ""
+      publish_release:
+        description: "Publish firmware to GitHub Releases."
+        required: true
+        type: boolean
+        default: true
+  push:
+    branches:
+      - master
+      - openwrt-24.10
+    paths:
+      - ".github/workflows/build-kq3566.yml"
+      - "configs/**"
+      - "docs/**"
+      - "patches/**"
+      - "scripts/**"
+  schedule:
+    - cron: "0 18 * * 5"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kq3566-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMMORTALWRT_REPO: https://github.com/immortalwrt/immortalwrt.git
+  MODEL: KQ3566
+  VAR_IMMORTALWRT_REF: ${{ vars.IMMORTALWRT_REF }}
+  VAR_DEFAULT_IP: ${{ vars.DEFAULT_IP }}
+  VAR_CUSTOM_FEEDS: ${{ vars.CUSTOM_FEEDS }}
+  VAR_CUSTOM_PACKAGES: ${{ vars.CUSTOM_PACKAGES }}
+  VAR_DISABLE_PACKAGES: ${{ vars.DISABLE_PACKAGES }}
+  VAR_RELEASE_TZ: ${{ vars.RELEASE_TZ }}
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout KQ3566 adaptation
+        uses: actions/checkout@v4
+
+      - name: Resolve build options
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          source_ref_input="${{ github.event.inputs.source_ref }}"
+          default_ip_input="${{ github.event.inputs.default_ip }}"
+          custom_feeds_input="${{ github.event.inputs.custom_feeds }}"
+          custom_packages_input="${{ github.event.inputs.custom_packages }}"
+          disable_packages_input="${{ github.event.inputs.disable_packages }}"
+          publish_release_input="${{ github.event.inputs.publish_release }}"
+
+          source_ref="${source_ref_input:-${VAR_IMMORTALWRT_REF:-master}}"
+          default_ip="${default_ip_input:-${VAR_DEFAULT_IP:-192.168.1.1}}"
+          custom_feeds="${custom_feeds_input:-${VAR_CUSTOM_FEEDS:-}}"
+          custom_packages="${custom_packages_input:-${VAR_CUSTOM_PACKAGES:-}}"
+          disable_packages="${disable_packages_input:-${VAR_DISABLE_PACKAGES:-}}"
+          release_tz="${VAR_RELEASE_TZ:-Asia/Shanghai}"
+          publish_release="${publish_release_input:-true}"
+
+          case "$source_ref" in
+            openwrt-24.10|refs/heads/openwrt-24.10)
+              patch_path="patches/openwrt-24.10/0001-rockchip-add-KQ3566-board-support.patch"
+              ;;
+            *)
+              patch_path="patches/master/0001-rockchip-add-KQ3566-board-support.patch"
+              ;;
+          esac
+          source_ref_safe="$(printf '%s' "$source_ref" | tr '/: @' '____')"
+
+          {
+            echo "SOURCE_REF=$source_ref"
+            echo "SOURCE_REF_SAFE=$source_ref_safe"
+            echo "DEFAULT_IP=$default_ip"
+            echo "PATCH_PATH=$patch_path"
+            echo "RELEASE_TZ=$release_tz"
+            echo "PUBLISH_RELEASE=$publish_release"
+            echo "CUSTOM_FEEDS<<EOF_CUSTOM_FEEDS"
+            printf '%s\n' "$custom_feeds"
+            echo "EOF_CUSTOM_FEEDS"
+            echo "CUSTOM_PACKAGES<<EOF_CUSTOM_PACKAGES"
+            printf '%s\n' "$custom_packages"
+            echo "EOF_CUSTOM_PACKAGES"
+            echo "DISABLE_PACKAGES<<EOF_DISABLE_PACKAGES"
+            printf '%s\n' "$disable_packages"
+            echo "EOF_DISABLE_PACKAGES"
+          } >> "$GITHUB_ENV"
+
+          echo "Source ref: $source_ref"
+          echo "Patch path: $patch_path"
+          echo "Default IP: $default_ip"
+
+      - name: Prepare build host
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc || true
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential clang flex bison g++ gawk gcc-multilib g++-multilib \
+            gettext git libncurses-dev libssl-dev python3 python3-distutils \
+            python3-setuptools rsync swig unzip zlib1g-dev file wget curl \
+            qemu-utils ccache libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev \
+            libltdl-dev libmpc-dev libmpfr-dev libreadline-dev patch pkg-config \
+            subversion texinfo uglifyjs xmlto xxd zstd
+
+      - name: Clone official ImmortalWrt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch "$SOURCE_REF" "$IMMORTALWRT_REPO" immortalwrt || {
+            git clone --depth 1 "$IMMORTALWRT_REPO" immortalwrt
+            git -C immortalwrt fetch --depth 1 origin "$SOURCE_REF"
+            git -C immortalwrt checkout FETCH_HEAD
+          }
+          echo "SOURCE_COMMIT=$(git -C immortalwrt rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Apply KQ3566 adaptation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C immortalwrt apply --check "$GITHUB_WORKSPACE/$PATCH_PATH"
+          git -C immortalwrt apply "$GITHUB_WORKSPACE/$PATCH_PATH"
+          git -C immortalwrt diff --check
+
+      - name: Update feeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${CUSTOM_FEEDS:-}" ]; then
+            {
+              echo
+              echo "# KQ3566 custom feeds"
+              printf '%s\n' "$CUSTOM_FEEDS"
+            } >> immortalwrt/feeds.conf.default
+          fi
+          cd immortalwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Prepare KQ3566 config
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/prepare-kq3566-build.sh scripts/collect-kq3566-artifacts.sh
+          ./scripts/prepare-kq3566-build.sh immortalwrt
+
+      - name: Download source packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          make -C immortalwrt download -j8 V=s || make -C immortalwrt download -j1 V=s
+
+      - name: Build firmware
+        shell: bash
+        run: |
+          set -euo pipefail
+          make -C immortalwrt -j"$(nproc)" || make -C immortalwrt -j1 V=s
+
+      - name: Collect firmware
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./scripts/collect-kq3566-artifacts.sh immortalwrt artifacts
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KQ3566-ImmortalWrt-${{ env.SOURCE_REF_SAFE }}-${{ github.run_number }}
+          path: artifacts/*
+          if-no-files-found: error
+
+      - name: Prepare release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          build_date="$(TZ="$RELEASE_TZ" date +%Y-%m-%d)"
+          build_stamp="$(TZ="$RELEASE_TZ" date +%Y%m%d-%H%M)"
+          release_tag="kq3566-${build_stamp}-r${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+          release_title="${build_date} KQ3566 ImmortalWrt"
+
+          {
+            echo "RELEASE_TAG=$release_tag"
+            echo "RELEASE_TITLE=$release_title"
+          } >> "$GITHUB_ENV"
+
+          cat > release-notes.md <<EOF
+          Model: KQ3566
+          Date: ${build_date}
+          Source: ${IMMORTALWRT_REPO}
+          Source ref: ${SOURCE_REF}
+          Source commit: ${SOURCE_COMMIT}
+          Adaptation commit: ${GITHUB_SHA}
+          Default IP: ${DEFAULT_IP}
+          Custom packages: ${CUSTOM_PACKAGES:-<none>}
+          Disabled packages: ${DISABLE_PACKAGES:-<none>}
+
+          Firmware files include sysupgrade images for TF/SD use and emmc images for raw eMMC flashing.
+          EOF
+
+      - name: Publish GitHub Release
+        if: env.PUBLISH_RELEASE == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG" artifacts/* \
+            --title "$RELEASE_TITLE" \
+            --notes-file release-notes.md \
+            --latest
