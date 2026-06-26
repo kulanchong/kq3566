@@ -7,8 +7,8 @@ from the official ImmortalWrt repository:
 https://github.com/immortalwrt/immortalwrt
 ```
 
-By default it follows the official latest branch, `master`, applies the
-KQ3566 master adaptation patch, builds the firmware, uploads the workflow
+By default it follows the official `openwrt-25.12` branch, applies the
+KQ3566 25.12 adaptation patch, builds the firmware, uploads the workflow
 artifact, and publishes a GitHub Release. The release title includes the
 build date and model name.
 
@@ -29,7 +29,7 @@ Settings -> Secrets and variables -> Actions -> Variables
 
 Supported variables:
 
-- `IMMORTALWRT_REF`: official ImmortalWrt ref to build. Default: `master`
+- `IMMORTALWRT_REF`: official ImmortalWrt ref to build. Default: `openwrt-25.12`
 - `DEFAULT_IP`: LAN and preinit/failsafe IP. Default: `192.168.1.1`
 - `CUSTOM_FEEDS`: extra `feeds.conf` lines, one per line
 - `CUSTOM_PACKAGES`: packages or full `CONFIG_PACKAGE_*` symbols to enable
@@ -64,12 +64,19 @@ Add a custom feed:
 CUSTOM_FEEDS=src-git custom https://github.com/example/openwrt-packages.git
 ```
 
-Build the older tested branch manually:
+Build the default 25.12 branch manually:
+
+```text
+source_ref=openwrt-25.12
+```
+
+Build the older tested 24.10 branch manually:
 
 ```text
 source_ref=openwrt-24.10
 ```
 
-When `source_ref` is `openwrt-24.10`, the workflow uses the
-`patches/openwrt-24.10` adaptation patch. All other refs use the
-`patches/master` patch.
+When `source_ref` is `openwrt-25.12`, the workflow uses the
+`patches/openwrt-25.12` adaptation patch. When `source_ref` is
+`openwrt-24.10`, it uses the `patches/openwrt-24.10` patch. Other refs
+use the `patches/master` patch.

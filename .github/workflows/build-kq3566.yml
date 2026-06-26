@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       source_ref:
-        description: "ImmortalWrt branch, tag, or commit. Empty = repository variable IMMORTALWRT_REF or master."
+        description: "ImmortalWrt branch, tag, or commit. Empty = repository variable IMMORTALWRT_REF or openwrt-25.12."
         required: false
         default: ""
       default_ip:
@@ -30,8 +30,7 @@ on:
         default: true
   push:
     branches:
-      - master
-      - openwrt-24.10
+      - openwrt-25.12
     paths:
       - ".github/workflows/build-kq3566.yml"
       - "configs/**"
@@ -79,7 +78,7 @@ jobs:
           disable_packages_input="${{ github.event.inputs.disable_packages }}"
           publish_release_input="${{ github.event.inputs.publish_release }}"
 
-          source_ref="${source_ref_input:-${VAR_IMMORTALWRT_REF:-master}}"
+          source_ref="${source_ref_input:-${VAR_IMMORTALWRT_REF:-openwrt-25.12}}"
           default_ip="${default_ip_input:-${VAR_DEFAULT_IP:-192.168.1.1}}"
           custom_feeds="${custom_feeds_input:-${VAR_CUSTOM_FEEDS:-}}"
           custom_packages="${custom_packages_input:-${VAR_CUSTOM_PACKAGES:-}}"
@@ -88,6 +87,9 @@ jobs:
           publish_release="${publish_release_input:-true}"
 
           case "$source_ref" in
+            openwrt-25.12|refs/heads/openwrt-25.12)
+              patch_path="patches/openwrt-25.12/0001-rockchip-add-KQ3566-board-support.patch"
+              ;;
             openwrt-24.10|refs/heads/openwrt-24.10)
               patch_path="patches/openwrt-24.10/0001-rockchip-add-KQ3566-board-support.patch"
               ;;

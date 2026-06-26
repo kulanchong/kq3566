@@ -10,6 +10,7 @@ contains KQ3566 adaptation patches and automation files only.
 - `docs/github-actions.md`
 - `docs/kq3566.md`
 - `patches/master/0001-rockchip-add-KQ3566-board-support.patch`
+- `patches/openwrt-25.12/0001-rockchip-add-KQ3566-board-support.patch`
 - `patches/openwrt-24.10/0001-rockchip-add-KQ3566-board-support.patch`
 - `scripts/collect-kq3566-artifacts.sh`
 - `scripts/prepare-kq3566-build.sh`
@@ -22,7 +23,7 @@ The patches touch these OpenWrt/ImmortalWrt paths:
 - `package/boot/arm-trusted-firmware-rockchip/Makefile`
 - `package/boot/arm-trusted-firmware-rockchip/atf-version.mk`
 - `package/boot/uboot-envtools/files/fw_defaults` on `openwrt-24.10`
-- `package/boot/uboot-tools/uboot-envtools/files/fw_defaults` on `master`
+- `package/boot/uboot-tools/uboot-envtools/files/fw_defaults` on `openwrt-25.12` and `master`
 - `package/boot/uboot-rockchip/Makefile`
 - `package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566-u-boot.dtsi`
 - `package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566.dts`
@@ -34,10 +35,14 @@ The patches touch these OpenWrt/ImmortalWrt paths:
 - `target/linux/rockchip/image/armv8.mk`
 - `target/linux/rockchip/modules.mk` on `openwrt-24.10`
 - `target/linux/rockchip/patches-6.6/011-07-arm64-dts-rockchip-add-kq3566-board.patch`
+- `target/linux/rockchip/patches-6.12/611-arm64-dts-rockchip-add-kq3566-board.patch`
 - `target/linux/rockchip/patches-6.18/611-arm64-dts-rockchip-add-kq3566-board.patch`
 
+Use `patches/openwrt-25.12/0001-rockchip-add-KQ3566-board-support.patch`
+for current official ImmortalWrt `openwrt-25.12`.
+
 Use `patches/master/0001-rockchip-add-KQ3566-board-support.patch`
-for current official ImmortalWrt `master`.
+for upstream ImmortalWrt `master`.
 
 Use `patches/openwrt-24.10/0001-rockchip-add-KQ3566-board-support.patch`
 for the older tested `openwrt-24.10` tree.

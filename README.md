@@ -15,12 +15,19 @@ the official ImmortalWrt repository and publishes firmware to Releases.
 Default automatic build source:
 
 - Repository: `https://github.com/immortalwrt/immortalwrt`
-- Ref: `master` by default, following the official latest branch
-- Patch: `patches/master/0001-rockchip-add-KQ3566-board-support.patch`
+- Ref: `openwrt-25.12`
+- Patch: `patches/openwrt-25.12/0001-rockchip-add-KQ3566-board-support.patch`
 
 ## Apply
 
 From a clean ImmortalWrt source tree:
+
+```sh
+git checkout openwrt-25.12
+git apply /path/to/kq3566/patches/openwrt-25.12/0001-rockchip-add-KQ3566-board-support.patch
+```
+
+For the upstream `master` tree:
 
 ```sh
 git checkout master
@@ -87,7 +94,7 @@ More board notes are in `docs/kq3566.md`.
 The workflow `.github/workflows/build-kq3566.yml` supports manual,
 scheduled, and push-triggered builds. It can customize:
 
-- official ImmortalWrt source ref
+- official ImmortalWrt source ref, default `openwrt-25.12`
 - default LAN and preinit IP
 - extra feeds
 - packages and package options
