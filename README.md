@@ -42,7 +42,7 @@ For the older tested `openwrt-24.10` tree:
 
 ```sh
 git checkout openwrt-24.10
-git am /path/to/kq3566/patches/openwrt-24.10/0001-rockchip-add-KQ3566-board-support.patch
+git apply /path/to/kq3566/patches/openwrt-24.10/0001-rockchip-add-KQ3566-board-support.patch
 ```
 
 Then build with:
@@ -91,6 +91,19 @@ immortalwrt-rockchip-armv8-kq_kq3566-squashfs-emmc.img.gz
 - Recovery key: SARADC VIN0
 - WORKING LED: GPIO0_C3
 - UART baud rate: 1500000
+
+## DDR Loader
+
+The tested loader for this board revision is
+`rk3566_ddr_1056MHz_v1.25.bin` / `rk356x_spl_loader_kq_ddr_v1.25.bin`.
+It is the KQ3566 RK3566 DDR3 loader for the current four-chip
+NT5CC256M16ER-EK DDR3 layout. Treat it as the standard loader for this
+KQ3566 hardware revision, not as a universal RK356x loader.
+
+Use this loader for MaskROM/RKDevTool flashing, especially on blank or
+replaced eMMC. Normal OpenWrt sysupgrade or LuCI firmware upgrade does
+not need to rewrite the loader. Re-test or rebuild the loader if the DDR
+part, topology, voltage, or routing changes.
 
 More board notes are in `docs/kq3566.md`.
 

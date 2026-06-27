@@ -1,9 +1,9 @@
 diff --git a/docs/kq3566.md b/docs/kq3566.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..85407a07059de7d7404f52dec19b4d259e0577e7
+index 0000000..2be259b
 --- /dev/null
 +++ b/docs/kq3566.md
-@@ -0,0 +1,74 @@
+@@ -0,0 +1,84 @@
 +# KQ3566 ImmortalWrt Adaptation
 +
 +KQ3566 is an RK3566 DDR3 board derived from the NanoPi R3S style layout.
@@ -69,9 +69,19 @@ index 0000000000000000000000000000000000000000..85407a07059de7d7404f52dec19b4d25
 +## Notes
 +
 +- U-Boot console baud rate is `1500000`.
-+- The DDR loader is RK3566 DDR3 v1.25.
++- The tested DDR loader is `rk3566_ddr_1056MHz_v1.25.bin`, also packaged
++  for RKDevTool use as `rk356x_spl_loader_kq_ddr_v1.25.bin`. It is for
++  this KQ3566 RK3566 DDR3 board revision and should not be treated as a
++  universal RK356x or R3S DDR4 loader.
 +- The board has discrete regulators, not the R3S RK809/TCS4525/HYM8563
-+  power tree.
++  power tree. `VDD_CPU` is controlled by `PWM0_M0` and keeps the RK3566
++  OPP voltage range while capping the CPU OPP table at 1.8 GHz.
++  `VDD_LOGIC/GPU/NPU` is controlled by `PWM1_M0` and fixed to the tested
++  920 mV operating point.
++- KQ3566 uses an OpenWrt cpufreq default of `ondemand`, minimum
++  1104000 kHz, and maximum equal to the board OPP limit. This keeps idle
++  behavior near the 0.9 V / 1.1 GHz operating point while preserving the
++  1.8 GHz ceiling.
 +- The HDMI software route is enabled in DTS. If DRM shows an active HDMI
 +  connector and valid EDID but no image, check HDMI 0.9V/1.8V analog rails,
 +  `HDMI_TX_REXT`, ESD parts, connector soldering, and TMDS pair routing.
@@ -79,7 +89,7 @@ index 0000000000000000000000000000000000000000..85407a07059de7d7404f52dec19b4d25
 +  `Loading Environment from nowhere`; firstboot now skips U-Boot default
 +  import when `/etc/fw_env.config` is absent.
 diff --git a/package/boot/arm-trusted-firmware-rockchip/Makefile b/package/boot/arm-trusted-firmware-rockchip/Makefile
-index 316db3439fd1ece9050818b230a19b0b671188be..f100b838449f00423a9da1fd8dcf5569bd5fd1ed 100644
+index 316db34..f100b83 100644
 --- a/package/boot/arm-trusted-firmware-rockchip/Makefile
 +++ b/package/boot/arm-trusted-firmware-rockchip/Makefile
 @@ -62,6 +62,12 @@ define Trusted-Firmware-A/rk3566
@@ -126,7 +136,7 @@ index 316db3439fd1ece9050818b230a19b0b671188be..f100b838449f00423a9da1fd8dcf5569
  	# This comment is the workaround for "extraneous 'endif'" error
  ifneq ($(LOADER),)
 diff --git a/package/boot/arm-trusted-firmware-rockchip/atf-version.mk b/package/boot/arm-trusted-firmware-rockchip/atf-version.mk
-index e7d343b36f7fafd796053e310a7dad875d635db6..95eeb90987f5d1a8faf6e4f79cb47b82b13732a7 100644
+index e7d343b..95eeb90 100644
 --- a/package/boot/arm-trusted-firmware-rockchip/atf-version.mk
 +++ b/package/boot/arm-trusted-firmware-rockchip/atf-version.mk
 @@ -15,6 +15,7 @@ RK3528_TPL:=rk3528_ddr_1056MHz_v1.11.bin
@@ -138,7 +148,7 @@ index e7d343b36f7fafd796053e310a7dad875d635db6..95eeb90987f5d1a8faf6e4f79cb47b82
  RK3568_ATF:=rk3568_bl31_v1.45.elf
  RK3568_TPL:=rk3568_ddr_1560MHz_v1.23.bin
 diff --git a/package/boot/uboot-rockchip/Makefile b/package/boot/uboot-rockchip/Makefile
-index f827f464eb4116bea1afe3aa2a5007cf233c4f56..c57a8d5ea7ec1f8d82ffc0b6217374a9d86bddfc 100644
+index f827f46..c57a8d5 100644
 --- a/package/boot/uboot-rockchip/Makefile
 +++ b/package/boot/uboot-rockchip/Makefile
 @@ -230,6 +230,15 @@ define U-Boot/nanopi-r3s-rk3566
@@ -167,7 +177,7 @@ index f827f464eb4116bea1afe3aa2a5007cf233c4f56..c57a8d5ea7ec1f8d82ffc0b6217374a9
    radxa-zero-3-rk3566 \
 diff --git a/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566-u-boot.dtsi b/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566-u-boot.dtsi
 new file mode 100644
-index 0000000000000000000000000000000000000000..e06ed7650d61014ddabe7ea9677d0ec3c8a065c2
+index 0000000..e06ed76
 --- /dev/null
 +++ b/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566-u-boot.dtsi
 @@ -0,0 +1,23 @@
@@ -196,7 +206,7 @@ index 0000000000000000000000000000000000000000..e06ed7650d61014ddabe7ea9677d0ec3
 +};
 diff --git a/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566.dts b/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566.dts
 new file mode 100644
-index 0000000000000000000000000000000000000000..9742dcd42a250c0d82bc7cf23169a8b2fb0b1d85
+index 0000000..9742dcd
 --- /dev/null
 +++ b/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566.dts
 @@ -0,0 +1,169 @@
@@ -371,10 +381,10 @@ index 0000000000000000000000000000000000000000..9742dcd42a250c0d82bc7cf23169a8b2
 +};
 diff --git a/package/boot/uboot-rockchip/src/configs/kq3566-rk3566_defconfig b/package/boot/uboot-rockchip/src/configs/kq3566-rk3566_defconfig
 new file mode 100644
-index 0000000000000000000000000000000000000000..1a8fefb80d8ec72de0960d31ef574160d6b83061
+index 0000000..d4c7a56
 --- /dev/null
 +++ b/package/boot/uboot-rockchip/src/configs/kq3566-rk3566_defconfig
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,80 @@
 +CONFIG_ARM=y
 +CONFIG_SKIP_LOWLEVEL_INIT=y
 +CONFIG_COUNTER_FREQUENCY=24000000
@@ -393,6 +403,7 @@ index 0000000000000000000000000000000000000000..1a8fefb80d8ec72de0960d31ef574160
 +CONFIG_SPL_FIT_SIGNATURE=y
 +CONFIG_SPL_LOAD_FIT=y
 +CONFIG_LEGACY_IMAGE_FORMAT=y
++CONFIG_BOOTCOMMAND="if mmc dev 0; then if ext4load mmc 0:1 ${scriptaddr} /boot.scr; then source ${scriptaddr}; fi; fi; if mmc dev 1; then if ext4load mmc 1:1 ${scriptaddr} /boot.scr; then source ${scriptaddr}; fi; fi; bootflow scan -lb"
 +CONFIG_DEFAULT_FDT_FILE="rockchip/rk3566-kq3566.dtb"
 +# CONFIG_DISPLAY_CPUINFO is not set
 +CONFIG_DISPLAY_BOARDINFO_LATE=y
@@ -455,7 +466,7 @@ index 0000000000000000000000000000000000000000..1a8fefb80d8ec72de0960d31ef574160
 +CONFIG_USB_DWC3_GENERIC=y
 +CONFIG_ERRNO_STR=y
 diff --git a/package/boot/uboot-tools/uboot-envtools/files/fw_defaults b/package/boot/uboot-tools/uboot-envtools/files/fw_defaults
-index 42558aaa88395494e7a4fdd7b7c8b82df8814c77..12ee112a4881401ac821dc77b562474ac937911e 100644
+index 42558aa..12ee112 100644
 --- a/package/boot/uboot-tools/uboot-envtools/files/fw_defaults
 +++ b/package/boot/uboot-tools/uboot-envtools/files/fw_defaults
 @@ -1,5 +1,7 @@
@@ -466,8 +477,36 @@ index 42558aaa88395494e7a4fdd7b7c8b82df8814c77..12ee112a4881401ac821dc77b562474a
  fw_loadenv
  
  board_config_update
+diff --git a/package/emortal/cpufreq/files/cpufreq.uci b/package/emortal/cpufreq/files/cpufreq.uci
+index 7d839d8..af5bbf5 100644
+--- a/package/emortal/cpufreq/files/cpufreq.uci
++++ b/package/emortal/cpufreq/files/cpufreq.uci
+@@ -15,6 +15,7 @@ CPU_FREQS="$(cat '/sys/devices/system/cpu/cpufreq/policy0/scaling_available_freq
+ CPU_MIN_FREQ="$(cat '/sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq')"
+ CPU_MAX_FREQ="$(cat '/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq')"
+ CPU_POLICYS="$(find '/sys/devices/system/cpu/cpufreq/policy'* -maxdepth 0 | grep -Eo '[0-9]+')"
++BOARD="$(strings '/proc/device-tree/compatible' | head -n1)"
+ SOC="$(strings '/proc/device-tree/compatible' | tail -n1)"
+ 
+ source "/etc/openwrt_release"
+@@ -52,7 +53,14 @@ case "$DISTRIB_TARGET" in
+ 			;;
+ 		"rockchip,rk3566"|\
+ 		"rockchip,rk3568")
+-			uci_write_config 0 schedutil 816000 "$CPU_MAX_FREQ"
++			case "$BOARD" in
++			"kq,kq3566")
++				uci_write_config 0 ondemand 1104000 "$CPU_MAX_FREQ" 10 85
++				;;
++			*)
++				uci_write_config 0 schedutil 816000 "$CPU_MAX_FREQ"
++				;;
++			esac
+ 			;;
+ 		"rockchip,rk3576")
+ 			uci_write_config 0 schedutil 1008000 2208000
 diff --git a/target/linux/rockchip/armv8/base-files/etc/board.d/01_leds b/target/linux/rockchip/armv8/base-files/etc/board.d/01_leds
-index 7173f1a7e2440cf39e188ec6a3c5319ceec4c882..40134d0aa0926b203a4265152f6d4dc8c1544b0d 100644
+index 7173f1a..40134d0 100644
 --- a/target/linux/rockchip/armv8/base-files/etc/board.d/01_leds
 +++ b/target/linux/rockchip/armv8/base-files/etc/board.d/01_leds
 @@ -16,6 +16,7 @@ friendlyarm,nanopi-r4s|\
@@ -479,7 +518,7 @@ index 7173f1a7e2440cf39e188ec6a3c5319ceec4c882..40134d0aa0926b203a4265152f6d4dc8
  xunlong,orangepi-r1-plus-lts)
  	ucidef_set_led_netdev "wan" "WAN" "green:wan" "eth0"
 diff --git a/target/linux/rockchip/armv8/base-files/etc/board.d/02_network b/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
-index a249e613bde9afc992011be4fb3cce4cb0086cd0..7b9f660626f16c8f94399ed734c4ae8bc2ac0b1c 100644
+index a249e61..7b9f660 100644
 --- a/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
 +++ b/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
 @@ -21,6 +21,7 @@ rockchip_setup_interfaces()
@@ -499,7 +538,7 @@ index a249e613bde9afc992011be4fb3cce4cb0086cd0..7b9f660626f16c8f94399ed734c4ae8b
  	xunlong,orangepi-5-plus)
  		wan_mac=$(macaddr_generate_from_mmc_cid mmcblk*)
 diff --git a/target/linux/rockchip/armv8/base-files/etc/hotplug.d/net/40-net-smp-affinity b/target/linux/rockchip/armv8/base-files/etc/hotplug.d/net/40-net-smp-affinity
-index f89e60330e4b6be1627368a2ed7d9d846135cbea..679b0d2be30c9eaa0033b7367f1f9b49eec1edfc 100644
+index f89e603..679b0d2 100644
 --- a/target/linux/rockchip/armv8/base-files/etc/hotplug.d/net/40-net-smp-affinity
 +++ b/target/linux/rockchip/armv8/base-files/etc/hotplug.d/net/40-net-smp-affinity
 @@ -38,6 +38,7 @@ ezpro,mrkaio-m68s|\
@@ -512,7 +551,7 @@ index f89e60330e4b6be1627368a2ed7d9d846135cbea..679b0d2be30c9eaa0033b7367f1f9b49
  mmbox,anas3035|\
 diff --git a/target/linux/rockchip/armv8/base-files/lib/preinit/05_set_preinit_iface_kq3566 b/target/linux/rockchip/armv8/base-files/lib/preinit/05_set_preinit_iface_kq3566
 new file mode 100644
-index 0000000000000000000000000000000000000000..6ece3852ca97b2564fa23c696e134649828171d8
+index 0000000..6ece385
 --- /dev/null
 +++ b/target/linux/rockchip/armv8/base-files/lib/preinit/05_set_preinit_iface_kq3566
 @@ -0,0 +1,9 @@
@@ -526,7 +565,7 @@ index 0000000000000000000000000000000000000000..6ece3852ca97b2564fa23c696e134649
 +
 +boot_hook_add preinit_main kq3566_set_preinit_iface
 diff --git a/target/linux/rockchip/image/armv8.mk b/target/linux/rockchip/image/armv8.mk
-index f07512624ee9b855d324ad498163baca1c617157..9a1ea95d30edbd9022ab8e64e6362a9bd1eaa5a7 100644
+index f075126..24e41fd 100644
 --- a/target/linux/rockchip/image/armv8.mk
 +++ b/target/linux/rockchip/image/armv8.mk
 @@ -211,6 +211,19 @@ define Device/friendlyarm_nanopi-r3s
@@ -550,7 +589,7 @@ index f07512624ee9b855d324ad498163baca1c617157..9a1ea95d30edbd9022ab8e64e6362a9b
    $(Device/rk3399)
    DEVICE_VENDOR := FriendlyARM
 diff --git a/target/linux/rockchip/modules.mk b/target/linux/rockchip/modules.mk
-index 0b8d15d366443b9bd9e8dcf7e27d244b7ebbab1d..8fcaa9368fb22fd50a2f1761c756d69266a29620 100644
+index 0b8d15d..8fcaa93 100644
 --- a/target/linux/rockchip/modules.mk
 +++ b/target/linux/rockchip/modules.mk
 @@ -13,6 +13,7 @@ define KernelPackage/drm-rockchip
@@ -580,10 +619,10 @@ index 0b8d15d366443b9bd9e8dcf7e27d244b7ebbab1d..8fcaa9368fb22fd50a2f1761c756d692
  define KernelPackage/drm-rockchip/description
 diff --git a/target/linux/rockchip/patches-6.12/611-arm64-dts-rockchip-add-kq3566-board.patch b/target/linux/rockchip/patches-6.12/611-arm64-dts-rockchip-add-kq3566-board.patch
 new file mode 100644
-index 0000000000000000000000000000000000000000..ac9f8f939da682d75956330025f297c8aa5a79e2
+index 0000000..f2b943f
 --- /dev/null
 +++ b/target/linux/rockchip/patches-6.12/611-arm64-dts-rockchip-add-kq3566-board.patch
-@@ -0,0 +1,343 @@
+@@ -0,0 +1,342 @@
 +From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 +From: OpenWrt Builder <builder@example.com>
 +Date: Thu, 25 Jun 2026 21:20:00 -0400
@@ -597,8 +636,8 @@ index 0000000000000000000000000000000000000000..ac9f8f939da682d75956330025f297c8
 +PERSTB line, GPIO0_C3 working LED, SARADC recovery key, and HDMI route.
 +---
 + arch/arm64/boot/dts/rockchip/Makefile          |   1 +
-+ arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts | 313 ++++++++++++++++++
-+ 2 files changed, 314 insertions(+)
++ arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts | 301 ++++++++++++++++++
++ 2 files changed, 302 insertions(+)
 + create mode 100644 arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts
 +
 +--- a/arch/arm64/boot/dts/rockchip/Makefile
@@ -613,7 +652,7 @@ index 0000000000000000000000000000000000000000..ac9f8f939da682d75956330025f297c8
 + dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-orangepi-3b-v2.1.dtb
 +--- /dev/null
 ++++ b/arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts
-+@@ -0,0 +1,313 @@
++@@ -0,0 +1,301 @@
 ++// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 ++
 ++#include "rk3566-nanopi-r3s.dts"
@@ -730,7 +769,7 @@ index 0000000000000000000000000000000000000000..ac9f8f939da682d75956330025f297c8
 ++		regulator-always-on;
 ++		regulator-boot-on;
 ++		regulator-min-microvolt = <810000>;
-++		regulator-max-microvolt = <1100000>;
+++		regulator-max-microvolt = <1200000>;
 ++		regulator-settling-time-up-us = <250>;
 ++		pwm-supply = <&vcc5v0_sys>;
 ++	};
@@ -741,9 +780,10 @@ index 0000000000000000000000000000000000000000..ac9f8f939da682d75956330025f297c8
 ++		regulator-name = "VDD_LOGIC_GPU_NPU";
 ++		regulator-always-on;
 ++		regulator-boot-on;
-++		regulator-min-microvolt = <810000>;
-++		regulator-max-microvolt = <1100000>;
+++		regulator-min-microvolt = <920000>;
+++		regulator-max-microvolt = <920000>;
 ++		regulator-settling-time-up-us = <250>;
+++		voltage-table = <920000 38>;
 ++		pwm-supply = <&vcc5v0_sys>;
 ++	};
 ++
@@ -798,8 +838,6 @@ index 0000000000000000000000000000000000000000..ac9f8f939da682d75956330025f297c8
 ++};
 ++
 ++&cpu0_opp_table {
-++	/delete-node/ opp-1608000000;
-++	/delete-node/ opp-1800000000;
 ++	/delete-node/ opp-1992000000;
 ++};
 ++
@@ -825,14 +863,6 @@ index 0000000000000000000000000000000000000000..ac9f8f939da682d75956330025f297c8
 ++	vccio5-supply = <&vcc_1v8_kq>;
 ++	vccio6-supply = <&vcc_1v8_kq>;
 ++	vccio7-supply = <&vcc_3v3_kq>;
-++	status = "okay";
-++};
-++
-++&pwm0 {
-++	status = "okay";
-++};
-++
-++&pwm1 {
 ++	status = "okay";
 ++};
 ++
@@ -899,6 +929,14 @@ index 0000000000000000000000000000000000000000..ac9f8f939da682d75956330025f297c8
 ++
 ++&pcie_reset_h {
 ++	rockchip,pins = <0 RK_PB0 RK_FUNC_GPIO &pcfg_pull_up>;
+++};
+++
+++&pwm0 {
+++	status = "okay";
+++};
+++
+++&pwm1 {
+++	status = "okay";
 ++};
 ++
 ++&rgmii_phy1 {
