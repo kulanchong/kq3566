@@ -636,8 +636,8 @@ index 0000000..f2b943f
 +PERSTB line, GPIO0_C3 working LED, SARADC recovery key, and HDMI route.
 +---
 + arch/arm64/boot/dts/rockchip/Makefile          |   1 +
-+ arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts | 301 ++++++++++++++++++
-+ 2 files changed, 302 insertions(+)
++ arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts | 312 ++++++++++++++++++
++ 2 files changed, 313 insertions(+)
 + create mode 100644 arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts
 +
 +--- a/arch/arm64/boot/dts/rockchip/Makefile
@@ -652,7 +652,7 @@ index 0000000..f2b943f
 + dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-orangepi-3b-v2.1.dtb
 +--- /dev/null
 ++++ b/arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts
-+@@ -0,0 +1,301 @@
++@@ -0,0 +1,312 @@
 ++// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 ++
 ++#include "rk3566-nanopi-r3s.dts"
