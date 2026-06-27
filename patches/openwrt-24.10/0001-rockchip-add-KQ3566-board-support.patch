@@ -559,6 +559,18 @@ index 0000000000..6ece3852ca
 +}
 +
 +boot_hook_add preinit_main kq3566_set_preinit_iface
+diff --git a/target/linux/rockchip/armv8/config-6.6 b/target/linux/rockchip/armv8/config-6.6
+index e5ce6a029e..d5ff6fe4ad 100644
+--- a/target/linux/rockchip/armv8/config-6.6
++++ b/target/linux/rockchip/armv8/config-6.6
+@@ -176,6 +176,7 @@ CONFIG_CPU_MITIGATIONS=y
+ CONFIG_CPU_PM=y
+ CONFIG_CPU_RMAP=y
+ CONFIG_CPU_THERMAL=y
++CONFIG_CPU_FREQ_THERMAL=y
+ CONFIG_CRASH_CORE=y
+ CONFIG_CRASH_DUMP=y
+ CONFIG_CRC16=y
 diff --git a/target/linux/rockchip/image/armv8.mk b/target/linux/rockchip/image/armv8.mk
 index f322d35fb0..595042e982 100644
 --- a/target/linux/rockchip/image/armv8.mk

@@ -559,6 +559,18 @@ index 0000000..6ece385
 +}
 +
 +boot_hook_add preinit_main kq3566_set_preinit_iface
+diff --git a/target/linux/rockchip/armv8/config-6.18 b/target/linux/rockchip/armv8/config-6.18
+index d3cc2d4..6231111 100644
+--- a/target/linux/rockchip/armv8/config-6.18
++++ b/target/linux/rockchip/armv8/config-6.18
+@@ -184,6 +184,7 @@ CONFIG_CPU_MITIGATIONS=y
+ CONFIG_CPU_PM=y
+ CONFIG_CPU_RMAP=y
+ CONFIG_CPU_THERMAL=y
++CONFIG_CPU_FREQ_THERMAL=y
+ # CONFIG_CRASH_DM_CRYPT is not set
+ CONFIG_CRASH_DUMP=y
+ CONFIG_CRASH_RESERVE=y
 diff --git a/target/linux/rockchip/image/armv8.mk b/target/linux/rockchip/image/armv8.mk
 index 4925553..a86c615 100644
 --- a/target/linux/rockchip/image/armv8.mk
@@ -584,7 +596,7 @@ index 4925553..a86c615 100644
    DEVICE_VENDOR := FriendlyARM
 diff --git a/target/linux/rockchip/patches-6.18/611-arm64-dts-rockchip-add-kq3566-board.patch b/target/linux/rockchip/patches-6.18/611-arm64-dts-rockchip-add-kq3566-board.patch
 new file mode 100644
-index 0000000..4347e08
+index 0000000..df6f90a
 --- /dev/null
 +++ b/target/linux/rockchip/patches-6.18/611-arm64-dts-rockchip-add-kq3566-board.patch
 @@ -0,0 +1,276 @@
