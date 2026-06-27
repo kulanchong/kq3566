@@ -74,6 +74,24 @@ chmod 0755 "$build_dir/files/etc/uci-defaults/99-kq3566-default-ip"
 
 make -C "$build_dir" defconfig
 
+required_symbols="
+CONFIG_PACKAGE_luci
+CONFIG_PACKAGE_luci-base
+CONFIG_PACKAGE_luci-mod-admin-full
+CONFIG_PACKAGE_luci-theme-bootstrap
+CONFIG_PACKAGE_uhttpd
+CONFIG_PACKAGE_uhttpd-mod-ubus
+CONFIG_PACKAGE_rpcd
+CONFIG_PACKAGE_rpcd-mod-luci
+"
+
+for symbol in $required_symbols; do
+	if ! grep -qx "${symbol}=y" "$build_dir/.config"; then
+		echo "Required web UI symbol is missing after defconfig: $symbol" >&2
+		exit 1
+	fi
+done
+
 echo "KQ3566 build config prepared"
 echo "DEFAULT_IP=$default_ip"
 echo "CUSTOM_PACKAGES=${custom_packages:-<none>}"

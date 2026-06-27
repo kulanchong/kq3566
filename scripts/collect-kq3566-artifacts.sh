@@ -15,11 +15,35 @@ mkdir -p "$out_dir"
 
 shopt -s nullglob
 kq_files=("$target_dir"/*kq_kq3566*)
+manifest_file="$target_dir/immortalwrt-rockchip-armv8-kq_kq3566.manifest"
 
 if [ "${#kq_files[@]}" -eq 0 ]; then
 	echo "No KQ3566 firmware files found in $target_dir" >&2
 	exit 1
 fi
+
+if [ ! -f "$manifest_file" ]; then
+	echo "KQ3566 manifest not found: $manifest_file" >&2
+	exit 1
+fi
+
+required_packages="
+luci
+luci-base
+luci-mod-admin-full
+luci-theme-bootstrap
+uhttpd
+uhttpd-mod-ubus
+rpcd
+rpcd-mod-luci
+"
+
+for package in $required_packages; do
+	if ! grep -Eq "^${package}[[:space:]]+-" "$manifest_file"; then
+		echo "Required web UI package is missing from firmware manifest: $package" >&2
+		exit 1
+	fi
+done
 
 cp "${kq_files[@]}" "$out_dir/"
 
