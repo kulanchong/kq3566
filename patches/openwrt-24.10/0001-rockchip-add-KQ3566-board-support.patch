@@ -588,7 +588,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..82a360588e513e807cda654be33773461b08ba36
 --- /dev/null
 +++ b/target/linux/rockchip/patches-6.6/011-07-arm64-dts-rockchip-add-kq3566-board.patch
-@@ -0,0 +1,331 @@
+@@ -0,0 +1,343 @@
 +From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 +From: OpenWrt Builder <builder@example.com>
 +Date: Thu, 25 Jun 2026 21:20:00 -0400
@@ -602,8 +602,8 @@ index 0000000000000000000000000000000000000000..82a360588e513e807cda654be3377346
 +PERSTB line.
 +---
 + arch/arm64/boot/dts/rockchip/Makefile          |   1 +
-+ arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts | 221 ++++++++++++++++++
-+ 2 files changed, 214 insertions(+)
++ arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts | 313 ++++++++++++++++++
++ 2 files changed, 314 insertions(+)
 + create mode 100644 arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts
 +
 +--- a/arch/arm64/boot/dts/rockchip/Makefile
@@ -618,7 +618,7 @@ index 0000000000000000000000000000000000000000..82a360588e513e807cda654be3377346
 + dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-soquartz-blade.dtb
 +--- /dev/null
 ++++ b/arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts
-+@@ -0,0 +1,301 @@
++@@ -0,0 +1,313 @@
 ++// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 ++
 ++#include "rk3566-nanopi-r3s.dts"
@@ -729,23 +729,27 @@ index 0000000000000000000000000000000000000000..82a360588e513e807cda654be3377346
 ++	};
 ++
 ++	vdd_cpu_kq: regulator-vdd-cpu-kq {
-++		compatible = "regulator-fixed";
+++		compatible = "pwm-regulator";
+++		pwms = <&pwm0 0 5000 1>;
 ++		regulator-name = "VDD_CPU";
 ++		regulator-always-on;
 ++		regulator-boot-on;
-++		regulator-min-microvolt = <955000>;
-++		regulator-max-microvolt = <955000>;
-++		vin-supply = <&vcc5v0_sys>;
+++		regulator-min-microvolt = <810000>;
+++		regulator-max-microvolt = <1100000>;
+++		regulator-settling-time-up-us = <250>;
+++		pwm-supply = <&vcc5v0_sys>;
 ++	};
 ++
 ++	vdd_logic_gpu_npu_kq: regulator-vdd-logic-gpu-npu-kq {
-++		compatible = "regulator-fixed";
+++		compatible = "pwm-regulator";
+++		pwms = <&pwm1 0 5000 1>;
 ++		regulator-name = "VDD_LOGIC_GPU_NPU";
 ++		regulator-always-on;
 ++		regulator-boot-on;
-++		regulator-min-microvolt = <920000>;
-++		regulator-max-microvolt = <920000>;
-++		vin-supply = <&vcc5v0_sys>;
+++		regulator-min-microvolt = <810000>;
+++		regulator-max-microvolt = <1100000>;
+++		regulator-settling-time-up-us = <250>;
+++		pwm-supply = <&vcc5v0_sys>;
 ++	};
 ++
 ++	vcc3v3_sd_kq: regulator-vcc3v3-sd-kq {
@@ -826,6 +830,14 @@ index 0000000000000000000000000000000000000000..82a360588e513e807cda654be3377346
 ++	vccio5-supply = <&vcc_1v8_kq>;
 ++	vccio6-supply = <&vcc_1v8_kq>;
 ++	vccio7-supply = <&vcc_3v3_kq>;
+++	status = "okay";
+++};
+++
+++&pwm0 {
+++	status = "okay";
+++};
+++
+++&pwm1 {
 ++	status = "okay";
 ++};
 ++
