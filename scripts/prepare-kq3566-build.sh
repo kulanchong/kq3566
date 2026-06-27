@@ -64,7 +64,9 @@ cp "$config_fragment" "$build_dir/.config"
 mkdir -p "$build_dir/files/etc/uci-defaults"
 cat > "$build_dir/files/etc/uci-defaults/99-kq3566-default-ip" <<EOF
 #!/bin/sh
+uci -q set network.lan.proto='static'
 uci -q set network.lan.ipaddr='$default_ip'
+uci -q set network.lan.netmask='255.255.255.0'
 uci -q commit network
 exit 0
 EOF
