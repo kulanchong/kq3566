@@ -177,10 +177,10 @@ index f827f46..c57a8d5 100644
    radxa-zero-3-rk3566 \
 diff --git a/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566-u-boot.dtsi b/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566-u-boot.dtsi
 new file mode 100644
-index 0000000..e06ed76
+index 0000000..39c34ce
 --- /dev/null
 +++ b/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566-u-boot.dtsi
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,28 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +
 +#include "rk3566-nanopi-r3s-u-boot.dtsi"
@@ -204,12 +204,17 @@ index 0000000..e06ed76
 +	bootph-pre-ram;
 +	bootph-some-ram;
 +};
++
++&sdmmc0_vol_ctrl_h {
++	bootph-pre-ram;
++	bootph-some-ram;
++};
 diff --git a/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566.dts b/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566.dts
 new file mode 100644
-index 0000000..9742dcd
+index 0000000..e9ac2a0
 --- /dev/null
 +++ b/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566.dts
-@@ -0,0 +1,169 @@
+@@ -0,0 +1,182 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 +
 +/dts-v1/;
@@ -276,16 +281,19 @@ index 0000000..9742dcd
 +		regulator-boot-on;
 +		regulator-min-microvolt = <3300000>;
 +		regulator-max-microvolt = <3300000>;
-+		enable-active-high;
-+		gpio = <&gpio0 RK_PA5 GPIO_ACTIVE_HIGH>;
++		gpio = <&gpio0 RK_PA5 GPIO_ACTIVE_LOW>;
 +		pinctrl-names = "default";
 +		pinctrl-0 = <&sdmmc0_pwren>;
-+		startup-delay-us = <200000>;
++		startup-delay-us = <800000>;
 +		vin-supply = <&vcc_3v3_kq>;
 +	};
 +
 +	vccio_sd_kq: regulator-vccio-sd-kq {
 +		compatible = "regulator-fixed";
++		enable-active-high;
++		gpio = <&gpio0 RK_PB6 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&sdmmc0_vol_ctrl_h>;
 +		regulator-name = "vccio_sd";
 +		regulator-always-on;
 +		regulator-boot-on;
@@ -366,6 +374,10 @@ index 0000000..9742dcd
 +	rockchip,pins = <0 RK_PB0 RK_FUNC_GPIO &pcfg_pull_up>;
 +};
 +
++&sdmmc0_pwren {
++	rockchip,pins = <0 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
++};
++
 +&rgmii_phy1 {
 +	interrupt-parent = <&gpio0>;
 +	interrupts = <RK_PC4 IRQ_TYPE_LEVEL_LOW>;
@@ -378,13 +390,19 @@ index 0000000..9742dcd
 +			rockchip,pins = <0 RK_PC4 RK_FUNC_GPIO &pcfg_pull_up>;
 +		};
 +	};
++
++	sdmmc0 {
++		sdmmc0_vol_ctrl_h: sdmmc0-vol-ctrl-h {
++			rockchip,pins = <0 RK_PB6 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
 +};
 diff --git a/package/boot/uboot-rockchip/src/configs/kq3566-rk3566_defconfig b/package/boot/uboot-rockchip/src/configs/kq3566-rk3566_defconfig
 new file mode 100644
-index 0000000..d4c7a56
+index 0000000..2c0bd78
 --- /dev/null
 +++ b/package/boot/uboot-rockchip/src/configs/kq3566-rk3566_defconfig
-@@ -0,0 +1,80 @@
+@@ -0,0 +1,82 @@
 +CONFIG_ARM=y
 +CONFIG_SKIP_LOWLEVEL_INIT=y
 +CONFIG_COUNTER_FREQUENCY=24000000
@@ -451,6 +469,8 @@ index 0000000..d4c7a56
 +CONFIG_SPL_PINCTRL=y
 +CONFIG_SPL_DM_REGULATOR=y
 +CONFIG_SPL_DM_REGULATOR_FIXED=y
++CONFIG_DM_REGULATOR_GPIO=y
++CONFIG_SPL_DM_REGULATOR_GPIO=y
 +CONFIG_DM_PMIC=y
 +CONFIG_PMIC_RK8XX=y
 +CONFIG_REGULATOR_RK8XX=y
@@ -631,10 +651,10 @@ index 0b8d15d..8fcaa93 100644
  define KernelPackage/drm-rockchip/description
 diff --git a/target/linux/rockchip/patches-6.12/611-arm64-dts-rockchip-add-kq3566-board.patch b/target/linux/rockchip/patches-6.12/611-arm64-dts-rockchip-add-kq3566-board.patch
 new file mode 100644
-index 0000000..50135c1
+index 0000000..c9b410f
 --- /dev/null
 +++ b/target/linux/rockchip/patches-6.12/611-arm64-dts-rockchip-add-kq3566-board.patch
-@@ -0,0 +1,342 @@
+@@ -0,0 +1,355 @@
 +From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 +From: OpenWrt Builder <builder@example.com>
 +Date: Thu, 25 Jun 2026 21:20:00 -0400
@@ -648,8 +668,8 @@ index 0000000..50135c1
 +PERSTB line, GPIO0_C3 working LED, SARADC recovery key, and HDMI route.
 +---
 + arch/arm64/boot/dts/rockchip/Makefile          |   1 +
-+ arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts | 312 ++++++++++++++++++
-+ 2 files changed, 313 insertions(+)
++ arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts | 325 ++++++++++++++++++
++ 2 files changed, 326 insertions(+)
 + create mode 100644 arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts
 +
 +--- a/arch/arm64/boot/dts/rockchip/Makefile
@@ -664,7 +684,7 @@ index 0000000..50135c1
 + dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-orangepi-3b-v2.1.dtb
 +--- /dev/null
 ++++ b/arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts
-+@@ -0,0 +1,312 @@
++@@ -0,0 +1,325 @@
 ++// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 ++
 ++#include "rk3566-nanopi-r3s.dts"
@@ -806,16 +826,19 @@ index 0000000..50135c1
 ++		regulator-boot-on;
 ++		regulator-min-microvolt = <3300000>;
 ++		regulator-max-microvolt = <3300000>;
-++		enable-active-high;
-++		gpio = <&gpio0 RK_PA5 GPIO_ACTIVE_HIGH>;
+++		gpio = <&gpio0 RK_PA5 GPIO_ACTIVE_LOW>;
 ++		pinctrl-names = "default";
 ++		pinctrl-0 = <&sdmmc0_pwren>;
-++		startup-delay-us = <200000>;
+++		startup-delay-us = <800000>;
 ++		vin-supply = <&vcc_3v3_kq>;
 ++	};
 ++
 ++	vccio_sd_kq: regulator-vccio-sd-kq {
 ++		compatible = "regulator-fixed";
+++		enable-active-high;
+++		gpio = <&gpio0 RK_PB6 GPIO_ACTIVE_HIGH>;
+++		pinctrl-names = "default";
+++		pinctrl-0 = <&sdmmc0_vol_ctrl_h>;
 ++		regulator-name = "VCCIO_SD";
 ++		regulator-always-on;
 ++		regulator-boot-on;
@@ -943,6 +966,10 @@ index 0000000..50135c1
 ++	rockchip,pins = <0 RK_PB0 RK_FUNC_GPIO &pcfg_pull_up>;
 ++};
 ++
+++&sdmmc0_pwren {
+++	rockchip,pins = <0 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
+++};
+++
 ++&pwm0 {
 ++	status = "okay";
 ++};
@@ -967,6 +994,12 @@ index 0000000..50135c1
 ++	gpio-leds {
 ++		working_led_pin: working-led-pin {
 ++			rockchip,pins = <0 RK_PC3 RK_FUNC_GPIO &pcfg_pull_none>;
+++		};
+++	};
+++
+++	sdmmc0 {
+++		sdmmc0_vol_ctrl_h: sdmmc0-vol-ctrl-h {
+++			rockchip,pins = <0 RK_PB6 RK_FUNC_GPIO &pcfg_pull_none>;
 ++		};
 ++	};
 ++};
