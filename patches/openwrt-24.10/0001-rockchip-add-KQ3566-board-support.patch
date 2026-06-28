@@ -1,9 +1,9 @@
 diff --git a/docs/kq3566.md b/docs/kq3566.md
 new file mode 100644
-index 0000000000..5e2e2ff350
+index 0000000000..87896cfcc3
 --- /dev/null
 +++ b/docs/kq3566.md
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,82 @@
 +# KQ3566 ImmortalWrt Adaptation
 +
 +KQ3566 is an RK3566 DDR3 board derived from the NanoPi R3S style layout.
@@ -80,6 +80,9 @@ index 0000000000..5e2e2ff350
 +  1104000 kHz, and maximum equal to the board OPP limit. This keeps idle
 +  behavior near the 0.9 V / 1.1 GHz operating point while preserving the
 +  1.8 GHz ceiling.
++- U-Boot tries TF/SD (`mmc1`) before eMMC (`mmc0`) so an inserted TF card
++  can be used as a recovery or test boot medium while eMMC remains the
++  normal fallback.
 +- `fw_env.config` is optional on this board because U-Boot may report
 +  `Loading Environment from nowhere`; firstboot now skips U-Boot default
 +  import when `/etc/fw_env.config` is absent.
@@ -395,7 +398,7 @@ index 0000000000..ef5e37bc88
 +};
 diff --git a/package/boot/uboot-rockchip/src/configs/kq3566-rk3566_defconfig b/package/boot/uboot-rockchip/src/configs/kq3566-rk3566_defconfig
 new file mode 100644
-index 0000000000..f5444501bf
+index 0000000000..c962264e72
 --- /dev/null
 +++ b/package/boot/uboot-rockchip/src/configs/kq3566-rk3566_defconfig
 @@ -0,0 +1,84 @@
@@ -417,7 +420,7 @@ index 0000000000..f5444501bf
 +CONFIG_SPL_FIT_SIGNATURE=y
 +CONFIG_SPL_LOAD_FIT=y
 +CONFIG_LEGACY_IMAGE_FORMAT=y
-+CONFIG_BOOTCOMMAND="if mmc dev 0; then if ext4load mmc 0:1 ${scriptaddr} /boot.scr; then source ${scriptaddr}; fi; fi; if mmc dev 1; then if ext4load mmc 1:1 ${scriptaddr} /boot.scr; then source ${scriptaddr}; fi; fi; bootflow scan -lb"
++CONFIG_BOOTCOMMAND="if mmc dev 1; then if ext4load mmc 1:1 ${scriptaddr} /boot.scr; then source ${scriptaddr}; fi; fi; if mmc dev 0; then if ext4load mmc 0:1 ${scriptaddr} /boot.scr; then source ${scriptaddr}; fi; fi; bootflow scan -lb"
 +CONFIG_DEFAULT_FDT_FILE="rockchip/rk3566-kq3566.dtb"
 +# CONFIG_DISPLAY_CPUINFO is not set
 +CONFIG_DISPLAY_BOARDINFO_LATE=y
