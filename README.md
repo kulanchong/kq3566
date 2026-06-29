@@ -90,6 +90,8 @@ immortalwrt-rockchip-armv8-kq_kq3566-squashfs-emmc.img.gz
 - SDMMC0 power enable: GPIO0_A5
 - Recovery key: SARADC VIN0
 - WORKING LED: GPIO0_C3
+- RTL8211F WAN LEDs: amber for 10/100 link, green for gigabit link and
+  RX/TX activity, configured by `phy-leds`
 - UART baud rate: 1500000
 
 ## DDR Loader

@@ -1,9 +1,9 @@
 diff --git a/docs/kq3566.md b/docs/kq3566.md
 new file mode 100644
-index 0000000..87896cf
+index 0000000..27f9a15
 --- /dev/null
 +++ b/docs/kq3566.md
-@@ -0,0 +1,82 @@
+@@ -0,0 +1,84 @@
 +# KQ3566 ImmortalWrt Adaptation
 +
 +KQ3566 is an RK3566 DDR3 board derived from the NanoPi R3S style layout.
@@ -21,6 +21,8 @@ index 0000000..87896cf
 +- Runtime Ethernet layout: LAN `eth1`, WAN `eth0`
 +- Early preinit/failsafe interface: `eth0`
 +- SARADC recovery key support on SARADC channel 0
++- RTL8211F WAN LEDs are configured through `/etc/init.d/phy-leds`: amber
++  for 10/100 link, green for gigabit link with RX/TX activity blink.
 +- eMMC raw image output in addition to the standard sysupgrade image
 +
 +## Build
@@ -523,18 +525,6 @@ index 7d839d8..af5bbf5 100644
  			;;
  		"rockchip,rk3576")
  			uci_write_config 0 schedutil 1008000 2208000
-diff --git a/target/linux/rockchip/armv8/base-files/etc/board.d/01_leds b/target/linux/rockchip/armv8/base-files/etc/board.d/01_leds
-index cc257dd..a38fb27 100644
---- a/target/linux/rockchip/armv8/base-files/etc/board.d/01_leds
-+++ b/target/linux/rockchip/armv8/base-files/etc/board.d/01_leds
-@@ -17,6 +17,7 @@ friendlyarm,nanopi-r4s|\
- friendlyarm,nanopi-r4se|\
- friendlyarm,nanopi-r4s-enterprise|\
- friendlyarm,nanopi-r6c|\
-+kq,kq3566|\
- xunlong,orangepi-r1-plus|\
- xunlong,orangepi-r1-plus-lts)
- 	ucidef_set_led_netdev "wan" "WAN" "green:wan" "eth0"
 diff --git a/target/linux/rockchip/armv8/base-files/etc/board.d/02_network b/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
 index 2fde2be..bb79b83 100644
 --- a/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
@@ -567,6 +557,21 @@ index 25a5649..bd84c7d 100644
  linkease,easepi-r1|\
  lunzn,fastrhino-r66s|\
  mmbox,anas3035|\
+diff --git a/target/linux/rockchip/armv8/base-files/etc/init.d/phy-leds b/target/linux/rockchip/armv8/base-files/etc/init.d/phy-leds
+index 71b2880..9bafe33 100755
+--- a/target/linux/rockchip/armv8/base-files/etc/init.d/phy-leds
++++ b/target/linux/rockchip/armv8/base-files/etc/init.d/phy-leds
+@@ -46,6 +46,10 @@ boot() {
+ 		netled_set "stmmac-1:01:amber:lan" "eth1" "link_10 link_100 link_1000" "0" "rx tx" "1"
+ 		netled_set "stmmac-1:01:green:lan" "eth1" "link_10 link_100 link_1000" "1" "rx tx" "0"
+ 		;;
++	kq,kq3566)
++		netled_set "stmmac-0:01:amber:wan" "eth0" "link_10 link_100" "1" "link_1000" "0" "rx tx" "0"
++		netled_set "stmmac-0:01:green:wan" "eth0" "link_10 link_100" "0" "link_1000" "1" "rx tx" "1"
++		;;
+ 	armsom,sige3|\
+ 	radxa,rock-5c|\
+ 	widora,mangopi-m28c)
 diff --git a/target/linux/rockchip/armv8/base-files/lib/preinit/05_set_preinit_iface_kq3566 b/target/linux/rockchip/armv8/base-files/lib/preinit/05_set_preinit_iface_kq3566
 new file mode 100644
 index 0000000..6ece385
