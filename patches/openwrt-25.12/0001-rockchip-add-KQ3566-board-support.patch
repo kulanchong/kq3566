@@ -22,8 +22,9 @@ index 0000000..2e007cc
 +- Early preinit/failsafe interface: `eth0`
 +- SARADC recovery key support on SARADC channel 0
 +- WORKING/status LED on `GPIO0_C3`
-+- RTL8211F WAN LEDs are configured through `/etc/init.d/phy-leds`: amber
-+  for 10/100 link, green for gigabit link with RX/TX activity blink.
++- RTL8211F WAN LEDs are configured through `/etc/init.d/phy-leds`: green
++  for link, amber for RX/TX activity, using the same RTL8211F hardware LED
++  rules as R3S.
 +- HDMI connector routing and Rockchip DRM/display-connector package support
 +- eMMC raw image output in addition to the standard sysupgrade image
 +
@@ -571,8 +572,8 @@ index 90767cb..a311dbd 100755
  		netled_set "stmmac-1:01:green:lan" "eth1" "link_10 link_100 link_1000" "1" "rx tx" "0"
  		;;
 +	kq,kq3566)
-+		netled_set "stmmac-0:01:amber:wan" "eth0" "link_10 link_100" "1" "link_1000" "0" "rx tx" "0"
-+		netled_set "stmmac-0:01:green:wan" "eth0" "link_10 link_100" "0" "link_1000" "1" "rx tx" "1"
++		netled_set "stmmac-0:01:amber:wan" "eth0" "link_10 link_100 link_1000" "0" "rx tx" "1"
++		netled_set "stmmac-0:01:green:wan" "eth0" "link_10 link_100 link_1000" "1" "rx tx" "0"
 +		;;
  	armsom,sige3|\
  	radxa,rock-5c|\
