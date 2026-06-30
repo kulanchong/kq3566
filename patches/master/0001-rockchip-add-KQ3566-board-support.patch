@@ -3,7 +3,7 @@ new file mode 100644
 index 0000000..27f9a15
 --- /dev/null
 +++ b/docs/kq3566.md
-@@ -0,0 +1,84 @@
+@@ -0,0 +1,85 @@
 +# KQ3566 ImmortalWrt Adaptation
 +
 +KQ3566 is an RK3566 DDR3 board derived from the NanoPi R3S style layout.
@@ -181,10 +181,16 @@ new file mode 100644
 index 0000000..39c34ce
 --- /dev/null
 +++ b/package/boot/uboot-rockchip/src/arch/arm/dts/rk3566-kq3566-u-boot.dtsi
-@@ -0,0 +1,28 @@
+@@ -0,0 +1,34 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +
 +#include "rk3566-nanopi-r3s-u-boot.dtsi"
++
++/ {
++	chosen {
++		u-boot,spl-boot-order = &sdmmc0, &sdhci;
++	};
++};
 +
 +&gpio0 {
 +	bootph-pre-ram;
