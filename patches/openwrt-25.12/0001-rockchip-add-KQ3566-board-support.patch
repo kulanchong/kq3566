@@ -433,7 +433,7 @@ index 0000000..26afacd
 +CONFIG_SPL_FIT_SIGNATURE=y
 +CONFIG_SPL_LOAD_FIT=y
 +CONFIG_LEGACY_IMAGE_FORMAT=y
-+CONFIG_BOOTCOMMAND="if mmc dev 1; then if ext4load mmc 1:1 ${scriptaddr} /boot.scr; then source ${scriptaddr}; fi; fi; if mmc dev 0; then if ext4load mmc 0:1 ${scriptaddr} /boot.scr; then source ${scriptaddr}; fi; fi; bootflow scan -lb"
++CONFIG_BOOTCOMMAND="if mmc dev 1; then setenv devtype mmc; setenv devnum 1; setenv distro_bootpart 1; if ext4load mmc 1:1 ${scriptaddr} /boot.scr; then source ${scriptaddr}; fi; fi; if mmc dev 0; then setenv devtype mmc; setenv devnum 0; setenv distro_bootpart 1; if ext4load mmc 0:1 ${scriptaddr} /boot.scr; then source ${scriptaddr}; fi; fi; bootflow scan -lb"
 +CONFIG_DEFAULT_FDT_FILE="rockchip/rk3566-kq3566.dtb"
 +# CONFIG_DISPLAY_CPUINFO is not set
 +CONFIG_DISPLAY_BOARDINFO_LATE=y
@@ -615,7 +615,7 @@ diff --git a/target/linux/rockchip/image/armv8.mk b/target/linux/rockchip/image/
 index f075126..24e41fd 100644
 --- a/target/linux/rockchip/image/armv8.mk
 +++ b/target/linux/rockchip/image/armv8.mk
-@@ -211,6 +211,19 @@ define Device/friendlyarm_nanopi-r3s
+@@ -211,6 +211,20 @@ define Device/friendlyarm_nanopi-r3s
  endef
  TARGET_DEVICES += friendlyarm_nanopi-r3s
  
@@ -625,6 +625,7 @@ index f075126..24e41fd 100644
 +  DEVICE_MODEL := KQ3566
 +  DEVICE_DTS := rk3566-kq3566
 +  UBOOT_DEVICE_NAME := kq3566-rk3566
++  BOOT_SCRIPT := kq3566
 +  IMAGES := sysupgrade.img.gz emmc.img.gz
 +  IMAGE/emmc.img.gz := boot-common | boot-script $$(BOOT_SCRIPT) | $$(BOOT_FLOW) | gzip
 +  DEVICE_PACKAGES := kmod-r8169 kmod-input-adc-keys kmod-saradc-rockchip \
@@ -635,6 +636,47 @@ index f075126..24e41fd 100644
  define Device/friendlyarm_nanopi-r4s
    $(Device/rk3399)
    DEVICE_VENDOR := FriendlyARM
+diff --git a/target/linux/rockchip/image/kq3566.bootscript b/target/linux/rockchip/image/kq3566.bootscript
+new file mode 100644
+index 0000000..661fe5c
+--- /dev/null
++++ b/target/linux/rockchip/image/kq3566.bootscript
+@@ -0,0 +1,35 @@
++if test -z "${devtype}" ;
++then devtype=mmc;
++fi;
++
++if test -z "${devnum}" ;
++then
++	if load mmc 1:1 ${kernel_addr_r} kernel.img ;
++	then devnum=1;
++	elif load mmc 0:1 ${kernel_addr_r} kernel.img ;
++	then devnum=0;
++	fi;
++fi;
++
++if test $stdout = 'serial@fe660000' ;
++then serial_addr=',0xfe660000';
++elif test $stdout = 'serial@feb50000' ;
++then serial_addr=',0xfeb50000';
++elif test $stdout = 'serial@ff130000' ;
++then serial_addr=',0xff130000';
++elif test $stdout = 'serial@ff1a0000' ;
++then serial_addr=',0xff1a0000';
++fi;
++
++if test "${devtype}" = "mmc" ;
++then rootdev="/dev/mmcblk${devnum}p2";
++else
++	part uuid ${devtype} ${devnum}:2 uuid;
++	rootdev="PARTUUID=${uuid}";
++fi;
++
++setenv bootargs "coherent_pool=2M console=tty1 console=ttyS2,1500000 earlycon=uart8250,mmio32${serial_addr} root=${rootdev} rw rootwait";
++
++load ${devtype} ${devnum}:1 ${kernel_addr_r} kernel.img
++
++bootm ${kernel_addr_r}
 diff --git a/target/linux/rockchip/modules.mk b/target/linux/rockchip/modules.mk
 index 0b8d15d..8fcaa93 100644
 --- a/target/linux/rockchip/modules.mk
