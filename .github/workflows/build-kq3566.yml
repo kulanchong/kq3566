@@ -55,6 +55,9 @@ env:
   VAR_CUSTOM_FEEDS: ${{ vars.CUSTOM_FEEDS }}
   VAR_CUSTOM_PACKAGES: ${{ vars.CUSTOM_PACKAGES }}
   VAR_DISABLE_PACKAGES: ${{ vars.DISABLE_PACKAGES }}
+  VAR_ENABLE_TURBOACC_SFE: ${{ vars.ENABLE_TURBOACC_SFE }}
+  VAR_TURBOACC_PACKAGE_REPO: ${{ vars.TURBOACC_PACKAGE_REPO }}
+  VAR_TURBOACC_PACKAGE_REF: ${{ vars.TURBOACC_PACKAGE_REF }}
   VAR_RELEASE_TZ: ${{ vars.RELEASE_TZ }}
 
 jobs:
@@ -83,6 +86,9 @@ jobs:
           custom_feeds="${custom_feeds_input:-${VAR_CUSTOM_FEEDS:-}}"
           custom_packages="${custom_packages_input:-${VAR_CUSTOM_PACKAGES:-}}"
           disable_packages="${disable_packages_input:-${VAR_DISABLE_PACKAGES:-}}"
+          enable_turboacc_sfe="${VAR_ENABLE_TURBOACC_SFE:-1}"
+          turboacc_package_repo="${VAR_TURBOACC_PACKAGE_REPO:-https://github.com/chenmozhijin/turboacc.git}"
+          turboacc_package_ref="${VAR_TURBOACC_PACKAGE_REF:-package}"
           release_tz="${VAR_RELEASE_TZ:-Asia/Shanghai}"
           publish_release="${publish_release_input:-true}"
 
@@ -115,6 +121,9 @@ jobs:
             echo "DISABLE_PACKAGES<<EOF_DISABLE_PACKAGES"
             printf '%s\n' "$disable_packages"
             echo "EOF_DISABLE_PACKAGES"
+            echo "ENABLE_TURBOACC_SFE=$enable_turboacc_sfe"
+            echo "TURBOACC_PACKAGE_REPO=$turboacc_package_repo"
+            echo "TURBOACC_PACKAGE_REF=$turboacc_package_ref"
           } >> "$GITHUB_ENV"
 
           echo "Source ref: $source_ref"
@@ -158,6 +167,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if ! grep -Eq '^[[:space:]]*src-git[[:space:]]+turboacc[[:space:]]+' immortalwrt/feeds.conf.default; then
+            {
+              echo
+              echo "# KQ3566 TurboACC LuCI feed"
+              echo "src-git turboacc https://github.com/chenmozhijin/turboacc.git;luci"
+            } >> immortalwrt/feeds.conf.default
+          fi
           if [ -n "${CUSTOM_FEEDS:-}" ]; then
             {
               echo

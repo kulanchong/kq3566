@@ -12,6 +12,12 @@ KQ3566 25.12 adaptation patch, builds the firmware, uploads the workflow
 artifact, and publishes a GitHub Release. The release title includes the
 build date and model name.
 
+The default build also enables TurboACC with Shortcut-FE/SFE instead of
+Linux nftables flow offload. The workflow adds the TurboACC LuCI feed
+automatically, and `scripts/prepare-kq3566-build.sh` copies the matching
+`shortcut-fe`/`fast-classifier` package sources and kernel patches for the
+current Rockchip kernel patch version.
+
 ## Automatic Triggers
 
 - Manual run: Actions -> Build KQ3566 ImmortalWrt -> Run workflow
@@ -35,6 +41,11 @@ Supported variables:
 - `CUSTOM_PACKAGES`: packages or full `CONFIG_PACKAGE_*` symbols to enable
 - `DISABLE_PACKAGES`: packages to force-disable
 - `RELEASE_TZ`: release date timezone. Default: `Asia/Shanghai`
+- `ENABLE_TURBOACC_SFE`: set to `0` to skip the default Shortcut-FE/SFE
+  source and patch installation. Default: `1`
+- `TURBOACC_PACKAGE_REPO`: source repository for Shortcut-FE/SFE package
+  files. Default: `https://github.com/chenmozhijin/turboacc.git`
+- `TURBOACC_PACKAGE_REF`: ref for the package source. Default: `package`
 
 Manual workflow inputs override repository variables for that run.
 
