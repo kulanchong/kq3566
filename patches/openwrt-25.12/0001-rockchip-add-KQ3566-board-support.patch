@@ -711,7 +711,7 @@ new file mode 100644
 index 0000000..c9b410f
 --- /dev/null
 +++ b/target/linux/rockchip/patches-6.12/611-arm64-dts-rockchip-add-kq3566-board.patch
-@@ -0,0 +1,355 @@
+@@ -0,0 +1,377 @@
 +From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 +From: OpenWrt Builder <builder@example.com>
 +Date: Thu, 25 Jun 2026 21:20:00 -0400
@@ -725,8 +725,8 @@ index 0000000..c9b410f
 +PERSTB line, GPIO0_C3 working LED, SARADC recovery key, and HDMI route.
 +---
 + arch/arm64/boot/dts/rockchip/Makefile          |   1 +
-+ arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts | 325 ++++++++++++++++++
-+ 2 files changed, 326 insertions(+)
++ arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts | 347 ++++++++++++++++++
++ 2 files changed, 348 insertions(+)
 + create mode 100644 arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts
 +
 +--- a/arch/arm64/boot/dts/rockchip/Makefile
@@ -741,7 +741,7 @@ index 0000000..c9b410f
 + dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-orangepi-3b-v2.1.dtb
 +--- /dev/null
 ++++ b/arch/arm64/boot/dts/rockchip/rk3566-kq3566.dts
-+@@ -0,0 +1,325 @@
++@@ -0,0 +1,347 @@
 ++// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 ++
 ++#include "rk3566-nanopi-r3s.dts"
@@ -903,6 +903,18 @@ index 0000000..c9b410f
 ++		regulator-max-microvolt = <3300000>;
 ++		vin-supply = <&vcc_3v3_kq>;
 ++	};
++
++	vcc5v0_usb_otg_kq: regulator-vcc5v0-usb-otg-kq {
++		compatible = "regulator-fixed";
++		enable-active-high;
++		gpio = <&gpio0 RK_PC6 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&usb_otg_pwren_h>;
++		regulator-name = "VCC5V0_USB20_OTG0";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&vcc5v0_sys>;
++	};
 ++};
 ++
 ++&vcc5v0_sys {
@@ -1027,6 +1039,10 @@ index 0000000..c9b410f
 ++	rockchip,pins = <0 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
 ++};
 ++
+++&usb2phy0_otg {
+++	phy-supply = <&vcc5v0_usb_otg_kq>;
+++};
+++
 ++&pwm0 {
 ++	status = "okay";
 ++};
@@ -1057,6 +1073,12 @@ index 0000000..c9b410f
 ++	sdmmc0 {
 ++		sdmmc0_vol_ctrl_h: sdmmc0-vol-ctrl-h {
 ++			rockchip,pins = <0 RK_PB6 RK_FUNC_GPIO &pcfg_pull_none>;
+++		};
+++	};
+++
+++	usb {
+++		usb_otg_pwren_h: usb-otg-pwren-h {
+++			rockchip,pins = <0 RK_PC6 RK_FUNC_GPIO &pcfg_pull_none>;
 ++		};
 ++	};
 ++};

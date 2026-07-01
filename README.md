@@ -88,6 +88,7 @@ immortalwrt-rockchip-armv8-kq_kq3566-squashfs-emmc.img.gz
 - External Ethernet: RTL8111H-CG on PCIe
 - PCIe PERSTB: GPIO0_B0
 - SDMMC0 power enable: GPIO0_A5
+- USB OTG 2.0 power enable: GPIO0_C6
 - Recovery key: SARADC VIN0
 - WORKING LED: GPIO0_C3
 - RTL8211F WAN LEDs: green for link, amber for RX/TX activity,
