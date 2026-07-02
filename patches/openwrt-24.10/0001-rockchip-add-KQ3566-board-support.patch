@@ -856,18 +856,18 @@ index 0000000000..1274ac0623
 ++		regulator-max-microvolt = <3300000>;
 ++		vin-supply = <&vcc_3v3_kq>;
 ++	};
-+
-+	vcc5v0_usb_otg_kq: regulator-vcc5v0-usb-otg-kq {
-+		compatible = "regulator-fixed";
-+		enable-active-high;
-+		gpio = <&gpio0 RK_PC6 GPIO_ACTIVE_HIGH>;
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&usb_otg_pwren_h>;
-+		regulator-name = "VCC5V0_USB20_OTG0";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		vin-supply = <&vcc5v0_sys>;
-+	};
+++
+++	vcc5v0_usb_otg_kq: regulator-vcc5v0-usb-otg-kq {
+++		compatible = "regulator-fixed";
+++		enable-active-high;
+++		gpio = <&gpio0 RK_PC6 GPIO_ACTIVE_HIGH>;
+++		pinctrl-names = "default";
+++		pinctrl-0 = <&usb_otg_pwren_h>;
+++		regulator-name = "VCC5V0_USB20_OTG0";
+++		regulator-min-microvolt = <5000000>;
+++		regulator-max-microvolt = <5000000>;
+++		vin-supply = <&vcc5v0_sys>;
+++	};
 ++
 ++	gpio-leds {
 ++		pinctrl-0 = <&working_led_pin>;
