@@ -216,6 +216,7 @@ jobs:
           name: KQ3566-ImmortalWrt-${{ env.SOURCE_REF_SAFE }}-${{ github.run_number }}
           path: artifacts/*
           if-no-files-found: error
+          retention-days: 1
 
       - name: Prepare release notes
         shell: bash
